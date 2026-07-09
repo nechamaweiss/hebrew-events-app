@@ -1,0 +1,138 @@
+// סכימת PostgreSQL לפריסה בענן (Vercel + Neon).
+// זהה לסכימה המקומית (schema.prisma) פרט לספק מסד הנתונים.
+// בבנייה ב-Vercel מופעל: prisma db push --schema=prisma/schema.postgres.prisma
+// יש לשמור קובץ זה מסונכרן עם prisma/schema.prisma.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  passwordHash     String
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  nickname    String?
+  eventType   String
+  hebrewDay   Int
+  hebrewMonth String
+  hebrewYear  Int?
+  recurring   Boolean  @default(true)
+  notes       String?
+  image       String?
+  active      Boolean  @default(true)
+
+  linkedRelativeId Int?
+  linkedRelative   Event?  @relation("FamilyLink", fields: [linkedRelativeId], references: [id], onDelete: SetNull)
+  relatives        Event[] @relation("FamilyLink")
+  relationLabel    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reminderSetting ReminderSetting?
+  eventRecipients EventRecipient[]
+  emailLogs       EmailLog[]
+}
+
+model Recipient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  eventRecipients EventRecipient[]
+  emailLogs       EmailLog[]
+}
+
+model EventRecipient {
+  id          Int @id @default(autoincrement())
+  eventId     Int
+  recipientId Int
+
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  recipient Recipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, recipientId])
+}
+
+model ReminderSetting {
+  id              Int     @id @default(autoincrement())
+  eventId         Int     @unique
+  sevenDaysBefore Boolean @default(true)
+  threeDaysBefore Boolean @default(false)
+  oneDayBefore    Boolean @default(true)
+  sameDay         Boolean @default(true)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EmailLog {
+  id             Int      @id @default(autoincrement())
+  eventId        Int?
+  recipientId    Int?
+  recipientEmail String?
+  reminderType   String
+  hebrewDateKey  String?
+  subject        String?
+  sentAt         DateTime @default(now())
+  status         String
+  errorMessage   String?
+
+  event     Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  recipient Recipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, recipientId, reminderType, hebrewDateKey])
+}
+
+model BusinessSettings {
+  id             Int     @id @default(1)
+  businessName   String  @default("מערכת התזכורות")
+  logo           String?
+  senderEmail    String  @default("noreply@example.com")
+  senderName     String  @default("מערכת התזכורות")
+  phone          String?
+  address        String?
+  emailSignature String  @default("בברכה,\nמערכת התזכורות")
+  description    String?
+}
+
+model EmailSettings {
+  id       Int     @id @default(1)
+  enabled  Boolean @default(false)
+  provider String  @default("gmail")
+  host     String  @default("smtp.gmail.com")
+  port     Int     @default(587)
+  secure   Boolean @default(false)
+  username String  @default("")
+  password String  @default("")
+}
+
+model ThemeSettings {
+  id                 Int     @id @default(1)
+  primary            String  @default("#4f46e5")
+  secondary          String  @default("#0ea5e9")
+  buttonColor        String  @default("#4f46e5")
+  linkColor          String  @default("#2563eb")
+  alertColor         String  @default("#dc2626")
+  headingColor       String  @default("#111827")
+  background         String  @default("#f7f8fa")
+  menuBackground     String  @default("#111827")
+  textColor          String  @default("#1f2937")
+  mode               String  @default("light")
+  animatedBackground Boolean @default(false)
+}

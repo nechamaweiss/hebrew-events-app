@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: #ffffff;
+  --border-color: #e5e7eb;
+  --muted: #6b7280;
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  background: var(--color-background, #f7f8fa);
+  color: var(--color-text, #1f2937);
+  font-family: "Rubik", "Heebo", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* רקע גרדיאנט מתחלף (משתמש בצבעי ערכת הנושא, עדין וקריא) */
+body.bg-animated {
+  background: linear-gradient(
+    -45deg,
+    var(--color-background),
+    color-mix(in srgb, var(--color-primary) 24%, var(--color-background)),
+    color-mix(in srgb, var(--color-secondary) 24%, var(--color-background)),
+    var(--color-background),
+    color-mix(in srgb, var(--color-primary) 18%, var(--color-background))
+  );
+  background-size: 400% 400%;
+  background-attachment: fixed;
+  animation: bgshift 18s ease infinite;
+}
+
+@keyframes bgshift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.bg-animated {
+    animation: none;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl p-5 shadow-card;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--color-button);
+  }
+  .btn:hover {
+    filter: brightness(0.94);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--color-text);
+  }
+  .btn-ghost:hover {
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition;
+    background: var(--color-alert);
+  }
+  .input,
+  .select,
+  .textarea {
+    @apply w-full rounded-lg px-3 py-2 text-sm outline-none transition;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    color: var(--color-text);
+  }
+  .input:focus,
+  .select:focus,
+  .textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium;
+    color: var(--color-text);
+  }
+  .heading {
+    color: var(--color-heading);
+  }
+  .link {
+    color: var(--color-link);
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-green {
+    @apply bg-green-100 text-green-800;
+  }
+  .badge-gray {
+    @apply bg-gray-100 text-gray-700;
+  }
+  .badge-red {
+    @apply bg-red-100 text-red-800;
+  }
+  .muted {
+    color: var(--muted);
+  }
+}
+
+/* טבלאות RTL */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th {
+  text-align: right;
+}
+
+/* גלילה אופקית לטבלאות רחבות במובייל */
+.table-wrap {
+  overflow-x: auto;
+}

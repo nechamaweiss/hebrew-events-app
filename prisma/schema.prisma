@@ -1,0 +1,146 @@
+// מסד נתונים למערכת תזכורות אירועים לפי הלוח העברי
+// SQLite לפיתוח מקומי. למעבר ל-PostgreSQL: שנה provider ל-"postgresql" ואת DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// המנהל היחיד במערכת
+model Admin {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  passwordHash     String
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+// אירוע/שמחה
+model Event {
+  id            Int      @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  nickname      String?
+  eventType     String // מתוך רשימה סגורה (ראה lib/constants)
+  hebrewDay     Int // 1..30
+  hebrewMonth   String // מזהה חודש עברי (כולל ADAR_1 / ADAR_2)
+  hebrewYear    Int? // רק לאירוע חד-פעמי
+  recurring     Boolean  @default(true)
+  notes         String?
+  image         String? // Data URL / נתיב
+  active         Boolean  @default(true)
+
+  // קשר משפחתי מתקדם: בן/בת/נכד של אירוע (אדם) אחר
+  linkedRelativeId Int?
+  linkedRelative   Event?  @relation("FamilyLink", fields: [linkedRelativeId], references: [id], onDelete: SetNull)
+  relatives        Event[] @relation("FamilyLink")
+  relationLabel    String? // "בן", "בת", "נכד"...
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reminderSetting ReminderSetting?
+  eventRecipients EventRecipient[]
+  emailLogs       EmailLog[]
+}
+
+// מקבל התראות
+model Recipient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  eventRecipients EventRecipient[]
+  emailLogs       EmailLog[]
+}
+
+// שיוך נמען לאירוע (רבים-לרבים)
+model EventRecipient {
+  id          Int @id @default(autoincrement())
+  eventId     Int
+  recipientId Int
+
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  recipient Recipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, recipientId])
+}
+
+// הגדרות תזכורת לכל אירוע
+model ReminderSetting {
+  id               Int     @id @default(autoincrement())
+  eventId          Int     @unique
+  sevenDaysBefore  Boolean @default(true)
+  threeDaysBefore  Boolean @default(false)
+  oneDayBefore     Boolean @default(true)
+  sameDay          Boolean @default(true)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+// לוג שליחת מיילים (משמש גם למניעת כפילות)
+model EmailLog {
+  id           Int      @id @default(autoincrement())
+  eventId      Int?
+  recipientId  Int?
+  recipientEmail String?
+  reminderType String // SEVEN_DAYS / THREE_DAYS / ONE_DAY / SAME_DAY / TEST / ADMIN_ALERT
+  hebrewDateKey String? // מפתח לתאריך העברי של מועד השליחה (למניעת כפילות)
+  subject      String?
+  sentAt       DateTime @default(now())
+  status       String // SUCCESS / FAILED
+  errorMessage String?
+
+  event     Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  recipient Recipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, recipientId, reminderType, hebrewDateKey])
+}
+
+// הגדרות עסק (סינגלטון: id=1)
+model BusinessSettings {
+  id             Int     @id @default(1)
+  businessName   String  @default("מערכת התזכורות")
+  logo           String?
+  senderEmail    String  @default("noreply@example.com")
+  senderName     String  @default("מערכת התזכורות")
+  phone          String?
+  address        String?
+  emailSignature String  @default("בברכה,\nמערכת התזכורות")
+  description    String?
+}
+
+// הגדרות שרת מייל (SMTP) — סינגלטון id=1. מאפשר שליחה אמיתית וחינמית (Gmail וכו')
+model EmailSettings {
+  id       Int     @id @default(1)
+  enabled  Boolean @default(false)
+  provider String  @default("gmail") // gmail / brevo / outlook / custom
+  host     String  @default("smtp.gmail.com")
+  port     Int     @default(587)
+  secure   Boolean @default(false) // true עבור פורט 465
+  username String  @default("")
+  password String  @default("") // סיסמת אפליקציה / מפתח SMTP
+}
+
+// הגדרות עיצוב (סינגלטון: id=1)
+model ThemeSettings {
+  id             Int    @id @default(1)
+  primary        String @default("#4f46e5")
+  secondary      String @default("#0ea5e9")
+  buttonColor    String @default("#4f46e5")
+  linkColor      String @default("#2563eb")
+  alertColor     String @default("#dc2626")
+  headingColor   String @default("#111827")
+  background     String @default("#f7f8fa")
+  menuBackground String @default("#111827")
+  textColor      String @default("#1f2937")
+  mode           String @default("light") // light / dark
+  animatedBackground Boolean @default(false) // רקע גרדיאנט מתחלף
+}
