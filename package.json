@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "vercel-build": "prisma generate --schema=prisma/schema.postgres.prisma && prisma db push --schema=prisma/schema.postgres.prisma --skip-generate --accept-data-loss && prisma db seed && next build",
+    "deploy:build": "prisma generate --schema=prisma/schema.postgres.prisma && prisma db push --schema=prisma/schema.postgres.prisma --skip-generate --accept-data-loss && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "scheduler": "tsx scripts/scheduler.ts",

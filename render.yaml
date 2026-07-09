@@ -1,0 +1,23 @@
+# הגדרות פריסה ל-Render (חינם, ללא SMS)
+# Render יזהה קובץ זה אוטומטית כ-Blueprint ויגדיר את השירות.
+services:
+  - type: web
+    name: hebrew-events
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run deploy:build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # המשתנים הבאים מוזנים ידנית בלוח הבקרה של Render (סודות):
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

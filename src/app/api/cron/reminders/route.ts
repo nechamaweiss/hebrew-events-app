@@ -9,8 +9,11 @@ export const maxDuration = 60;
 async function handle(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
+    // מקבל את הסוד או בכותרת (Vercel Cron) או בפרמטר ?key= (שירותי תזמון חיצוניים כמו cron-job.org)
     const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
+    const keyParam = req.nextUrl.searchParams.get("key");
+    const authorized = auth === `Bearer ${secret}` || keyParam === secret;
+    if (!authorized) {
       return new Response("Unauthorized", { status: 401 });
     }
   }
