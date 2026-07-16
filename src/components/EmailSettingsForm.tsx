@@ -130,7 +130,7 @@ export default function EmailSettingsForm({ initial }: { initial: Data }) {
             <input className="input" value={data.username} onChange={(e) => set("username", e.target.value)} dir="ltr" placeholder="you@gmail.com" />
           </div>
           <div>
-            <label className="label">סיסמת אפליקציה / מפתח SMTP</label>
+            <label className="label">{data.provider === "brevo" ? "מפתח API (xkeysib)" : "סיסמת אפליקציה / מפתח SMTP"}</label>
             <input
               type="password"
               className="input"
@@ -141,6 +141,12 @@ export default function EmailSettingsForm({ initial }: { initial: Data }) {
             />
           </div>
         </div>
+
+        {data.provider === "brevo" && (
+          <div className="rounded-lg p-3 text-sm" style={{ background: "color-mix(in srgb, var(--color-primary) 8%, transparent)" }}>
+            💡 <strong>Brevo שולח דרך ה-API</strong> (עוקף חסימות שרת). בשדה הסיסמה הדביקי <strong>מפתח API</strong> שמתחיל ב-<code>xkeysib-</code> (מלשונית <strong>„API keys & MCP"</strong> ב-Brevo), <u>לא</u> את ה-SMTP key. שם המשתמש יכול להישאר כפי שהוא.
+          </div>
+        )}
       </div>
 
       {/* הוראות Gmail */}
