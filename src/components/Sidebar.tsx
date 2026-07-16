@@ -9,6 +9,7 @@ const NAV = [
   { href: "/events", label: "אירועים", icon: "🎉" },
   { href: "/recipients", label: "מקבלי התראות", icon: "👥" },
   { href: "/calendar", label: "לוח שנה עברי", icon: "🗓️" },
+  { href: "/scheduled", label: "מיילים מתוזמנים", icon: "📤" },
   { href: "/logs", label: "לוג מיילים", icon: "📧" },
   { href: "/settings/business", label: "הגדרות העסק", icon: "🏢" },
   { href: "/settings/email", label: "שרת מייל", icon: "📮" },

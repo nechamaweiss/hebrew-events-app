@@ -176,6 +176,26 @@ export function renderHebrewYear(year: number): string {
   return gematriya(year);
 }
 
+/** השנה העברית הנוכחית */
+export function currentHebrewYear(): number {
+  return new HDate(new Date()).getFullYear();
+}
+
+/** רשימת ימים (1–30) עם תוויות בגימטרייה, לבחירה בטפסים */
+export function hebrewDayOptions(): { value: number; label: string }[] {
+  return Array.from({ length: 30 }, (_, i) => ({ value: i + 1, label: gematriya(i + 1) }));
+}
+
+/** רשימת שנים עבריות עם תוויות בגימטרייה (מהעתיד הקרוב אחורה), לבחירה בטפסים */
+export function hebrewYearOptions(backYears = 120, forwardYears = 5): { value: number; label: string }[] {
+  const cur = currentHebrewYear();
+  const arr: { value: number; label: string }[] = [];
+  for (let y = cur + forwardYears; y >= cur - backYears; y--) {
+    arr.push({ value: y, label: gematriya(y) });
+  }
+  return arr;
+}
+
 /** רינדור תאריך עברי מלא (יום+חודש+שנה) מתוך תאריך לועזי, למשל: כ״ד בתמוז תשפ״ו */
 export function renderHebrewFull(date: Date): string {
   const hd = new HDate(new Date(date.getFullYear(), date.getMonth(), date.getDate()));

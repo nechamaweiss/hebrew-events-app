@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EVENT_TYPES, HEBREW_MONTHS, REMINDER_TYPES } from "@/lib/constants";
+import { hebrewDayOptions, hebrewYearOptions, currentHebrewYear } from "@/lib/hebcal";
 import EmailPreviewModal from "./EmailPreviewModal";
 
 interface RecipientLite {
@@ -43,7 +44,9 @@ interface EventFormData {
 
 const RELATION_OPTIONS = ["בן", "בת", "נכד", "נכדה", "אח", "אחות", "בן/בת זוג", "הורה", "אחר"];
 
-const CURRENT_HEBREW_YEAR = 5785;
+const DAY_OPTIONS = hebrewDayOptions();
+const YEAR_OPTIONS = hebrewYearOptions();
+const CURRENT_HEBREW_YEAR = currentHebrewYear();
 
 export default function EventForm({
   initial,
@@ -224,9 +227,9 @@ export default function EventForm({
           <div>
             <label className="label">יום עברי *</label>
             <select className="select" value={data.hebrewDay} onChange={(e) => set("hebrewDay", Number(e.target.value))}>
-              {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                <option key={d} value={d}>
-                  {d}
+              {DAY_OPTIONS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
                 </option>
               ))}
             </select>
@@ -244,13 +247,17 @@ export default function EventForm({
           {!data.recurring && (
             <div>
               <label className="label">שנה עברית *</label>
-              <input
-                type="number"
-                className="input"
+              <select
+                className="select"
                 value={data.hebrewYear ?? CURRENT_HEBREW_YEAR}
                 onChange={(e) => set("hebrewYear", Number(e.target.value))}
-                placeholder="5785"
-              />
+              >
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y.value} value={y.value}>
+                    {y.label}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
         </div>

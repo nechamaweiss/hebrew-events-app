@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HEBREW_MONTHS, REMINDER_TYPES } from "@/lib/constants";
+import { hebrewDayOptions, hebrewYearOptions, currentHebrewYear } from "@/lib/hebcal";
 import { computeMilestones, Gender, MilestoneId } from "@/lib/milestones";
+
+const DAY_OPTIONS = hebrewDayOptions();
+const YEAR_OPTIONS = hebrewYearOptions();
 
 interface RecipientLite {
   id: number;
@@ -27,7 +31,7 @@ export default function BirthDateForm({ recipients }: { recipients: RecipientLit
   const [gender, setGender] = useState<Gender>("male");
   const [birthDay, setBirthDay] = useState(1);
   const [birthMonth, setBirthMonth] = useState("TISHREI");
-  const [birthYear, setBirthYear] = useState(5785);
+  const [birthYear, setBirthYear] = useState(currentHebrewYear());
   const [selected, setSelected] = useState<Set<MilestoneId>>(
     new Set(["BIRTHDAY", "BRIT", "CHALAKE", "MITZVAH"])
   );
@@ -162,9 +166,9 @@ export default function BirthDateForm({ recipients }: { recipients: RecipientLit
           <div>
             <label className="label">יום *</label>
             <select className="select" value={birthDay} onChange={(e) => setBirthDay(Number(e.target.value))}>
-              {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                <option key={d} value={d}>
-                  {d}
+              {DAY_OPTIONS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
                 </option>
               ))}
             </select>
@@ -181,13 +185,13 @@ export default function BirthDateForm({ recipients }: { recipients: RecipientLit
           </div>
           <div>
             <label className="label">שנה עברית *</label>
-            <input
-              type="number"
-              className="input"
-              value={birthYear}
-              onChange={(e) => setBirthYear(Number(e.target.value))}
-              placeholder="5785"
-            />
+            <select className="select" value={birthYear} onChange={(e) => setBirthYear(Number(e.target.value))}>
+              {YEAR_OPTIONS.map((y) => (
+                <option key={y.value} value={y.value}>
+                  {y.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
