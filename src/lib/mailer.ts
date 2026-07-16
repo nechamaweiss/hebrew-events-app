@@ -83,8 +83,10 @@ export async function sendMail(args: SendMailArgs): Promise<SendMailResult> {
     return { success: true, simulated: true };
   }
 
-  // בעת שימוש ב-SMTP אמיתי, כתובת השולח חייבת להתאים לחשבון המאומת (דרישת Gmail וכו')
-  const from = `"${fromName}" <${cfg.fromEmail}>`;
+  // כתובת השולח: משתמשים בכתובת השולח המוגדרת בהגדרות העסק (חייבת להיות שולח מאומת ב-Brevo),
+  // ובהיעדרה נופלים לשם המשתמש של ה-SMTP (מתאים ל-Gmail שממילא כותב מחדש את השולח).
+  const fromEmail = (args.fromEmail && args.fromEmail.trim()) || cfg.fromEmail;
+  const from = `"${fromName}" <${fromEmail}>`;
 
   try {
     await buildTransport(cfg).sendMail({
@@ -93,7 +95,7 @@ export async function sendMail(args: SendMailArgs): Promise<SendMailResult> {
       subject: args.subject,
       html: args.html,
       text: args.text,
-      replyTo: args.fromEmail || undefined,
+      replyTo: fromEmail,
     });
     return { success: true, simulated: false };
   } catch (err) {
