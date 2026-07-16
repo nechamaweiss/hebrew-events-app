@@ -78,6 +78,19 @@ export function buildEventEmail(params: {
   const willOccur = reminderType === "SAME_DAY" ? "היום יחול:" : `${phrase} יחול:`;
   const countdown = reminderType === "SAME_DAY" ? `🎉 ${phrase}` : `⏰ ${phrase}`;
 
+  // קונפטי מונפש (CSS) — יורד ומסתובב בפתיחת המייל בלקוחות התומכים (Apple Mail/iOS)
+  const confettiColors = ["#ff5964", "#ffd166", "#06d6a0", "#4cc9f0", "#f72585", "#8338ec", "#ffffff", "#ff8fab"];
+  let confetti = "";
+  for (let i = 0; i < 20; i++) {
+    const left = Math.round(3 + (i * 94) / 19);
+    const color = confettiColors[i % confettiColors.length];
+    const delay = ((i * 0.11) % 1.6).toFixed(2);
+    const dur = (1.8 + (i % 5) * 0.2).toFixed(2);
+    const top = (i % 4) * 9;
+    const rot = i % 2 ? 25 : -20;
+    confetti += `<span class="cft" style="left:${left}%;top:${top}px;background:${color};animation-delay:${delay}s;animation-duration:${dur}s;transform:rotate(${rot}deg);"></span>`;
+  }
+
   const text = [
     greeting,
     "",
@@ -93,20 +106,26 @@ export function buildEventEmail(params: {
 
   const html = `<!DOCTYPE html>
 <html dir="rtl" lang="he">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@keyframes cftFall { 0%{transform:translateY(-30px) rotate(0deg);opacity:0;} 12%{opacity:1;} 100%{transform:translateY(150px) rotate(400deg);opacity:0;} }
+.cft { position:absolute; width:9px; height:15px; border-radius:2px; opacity:.9; animation-name:cftFall; animation-timing-function:ease-in; animation-iteration-count:infinite; }
+</style>
+</head>
 <body style="margin:0;padding:0;background:${theme.background};font-family:'Segoe UI',Arial,sans-serif;direction:rtl;">
   <div style="padding:24px 12px;">
     <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,0.10);">
 
       <!-- כותרת -->
-      <div style="background:${primary};background:linear-gradient(135deg,${primary},${secondary});padding:34px 28px;text-align:center;">
+      <div style="position:relative;overflow:hidden;background:${primary};background:linear-gradient(135deg,${primary},${secondary});padding:34px 28px;text-align:center;">
+        <div style="position:absolute;top:0;left:0;right:0;height:130px;pointer-events:none;">${confetti}</div>
         ${
           business.logo
-            ? `<img src="${business.logo}" alt="${escapeHtml(business.businessName)}" style="max-height:52px;margin-bottom:12px;" />`
+            ? `<img src="${business.logo}" alt="${escapeHtml(business.businessName)}" style="position:relative;max-height:52px;margin-bottom:12px;" />`
             : ""
         }
-        <div style="width:82px;height:82px;line-height:82px;margin:0 auto 12px;background:rgba(255,255,255,0.22);border-radius:50%;font-size:42px;text-align:center;">${emoji}</div>
-        <div style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:.3px;">${escapeHtml(business.businessName)}</div>
+        <div style="position:relative;width:82px;height:82px;line-height:82px;margin:0 auto 12px;background:rgba(255,255,255,0.22);border-radius:50%;font-size:42px;text-align:center;">${emoji}</div>
+        <div style="position:relative;color:#ffffff;font-size:22px;font-weight:800;letter-spacing:.3px;">${escapeHtml(business.businessName)} 🎉</div>
       </div>
 
       <!-- גוף -->

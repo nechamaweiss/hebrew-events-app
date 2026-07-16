@@ -65,6 +65,10 @@ function buildTransport(cfg: SmtpConfig): nodemailer.Transporter {
     port: cfg.port,
     secure: cfg.secure,
     auth: cfg.user ? { user: cfg.user, pass: cfg.pass } : undefined,
+    // מגבלות זמן כדי שלא ייתקע אם השרת/פורט חסום או פרטים שגויים
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
   });
 }
 
