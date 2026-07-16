@@ -176,6 +176,15 @@ export function renderHebrewYear(year: number): string {
   return gematriya(year);
 }
 
+/** רינדור תאריך עברי מלא (יום+חודש+שנה) מתוך תאריך לועזי, למשל: כ״ד בתמוז תשפ״ו */
+export function renderHebrewFull(date: Date): string {
+  const hd = new HDate(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = gematriya(hd.getDate());
+  const month = monthNameHebrew(hd.getMonth(), hd.getFullYear());
+  const year = gematriya(hd.getFullYear());
+  return `${day} ב${month} ${year}`;
+}
+
 /** מפתח ייחודי לתאריך עברי (למניעת שליחת תזכורת כפולה) */
 export function hebrewDateKey(from: Date = new Date()): string {
   const hd = new HDate(startOfDay(from));

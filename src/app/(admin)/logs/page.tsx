@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import PageHeader from "@/components/PageHeader";
 import { reminderTypeLabel } from "@/lib/constants";
+import { renderHebrewFull } from "@/lib/hebcal";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function LogsPage() {
             <table>
               <thead>
                 <tr className="text-sm muted">
-                  <th className="pb-3">תאריך</th>
+                  <th className="pb-3">תאריך עברי</th>
                   <th className="pb-3">שעה</th>
                   <th className="pb-3">אירוע</th>
                   <th className="pb-3">נמען</th>
@@ -39,7 +40,7 @@ export default async function LogsPage() {
                   const eventName = l.event ? `${l.event.firstName} ${l.event.lastName}` : "—";
                   return (
                     <tr key={l.id} style={{ borderTop: "1px solid var(--border-color)" }}>
-                      <td className="py-3">{d.toLocaleDateString("he-IL")}</td>
+                      <td className="py-3">{renderHebrewFull(d)}</td>
                       <td className="py-3">{d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}</td>
                       <td className="py-3">{eventName}</td>
                       <td className="py-3">{recipientName}</td>
