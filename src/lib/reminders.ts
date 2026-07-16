@@ -73,7 +73,13 @@ export async function runReminders(runDate: Date = new Date()): Promise<Reminder
   }
 
   const themeInput = theme
-    ? { primary: theme.primary, heading: theme.headingColor, text: theme.textColor, background: theme.background }
+    ? {
+        primary: theme.primary,
+        secondary: theme.secondary,
+        heading: theme.headingColor,
+        text: theme.textColor,
+        background: theme.background,
+      }
     : undefined;
 
   const events = await prisma.event.findMany({

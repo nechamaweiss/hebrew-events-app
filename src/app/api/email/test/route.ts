@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     business,
     theme: {
       primary: theme.primary,
+      secondary: theme.secondary,
       heading: theme.headingColor,
       text: theme.textColor,
       background: theme.background,

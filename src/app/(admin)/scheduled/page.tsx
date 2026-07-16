@@ -4,6 +4,7 @@ import PageHeader from "@/components/PageHeader";
 import { nextOccurrence, renderHebrewFull, renderHebrewDayMonth, HDate } from "@/lib/hebcal";
 import { REMINDER_TYPES, reminderTypeLabel, eventTypeLabel } from "@/lib/constants";
 import { buildEventEmail } from "@/lib/email-template";
+import PreviewEmailButton from "@/components/PreviewEmailButton";
 
 export const dynamic = "force-dynamic";
 
@@ -88,8 +89,11 @@ export default async function ScheduledPage() {
                   </Link>
                   <span className="badge badge-gray mr-2">{eventTypeLabel(ev.eventType)}</span>
                 </div>
-                <div className="text-sm muted">
-                  האירוע: {renderHebrewDayMonth(ev.hebrewDay, ev.hebrewMonth, occYear)} ({renderHebrewFull(occ)})
+                <div className="flex items-center gap-3">
+                  <span className="text-sm muted">
+                    האירוע: {renderHebrewDayMonth(ev.hebrewDay, ev.hebrewMonth, occYear)}
+                  </span>
+                  <PreviewEmailButton eventId={ev.id} />
                 </div>
               </div>
 

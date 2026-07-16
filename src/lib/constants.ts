@@ -25,6 +25,23 @@ export const EVENT_TYPES: { id: EventTypeId; label: string; genitive: string }[]
   { id: "OTHER", label: "אחר", genitive: "האירוע" },
 ];
 
+const EVENT_TYPE_EMOJI: Record<string, string> = {
+  BIRTHDAY: "🎂",
+  ANNIVERSARY: "💍",
+  BAR_MITZVAH: "📖",
+  BAT_MITZVAH: "🕯️",
+  BRIT: "👶",
+  BRITA: "👶",
+  CHALAKE: "✂️",
+  FAMILY_EVENT: "🎉",
+  MEMORIAL: "🕯️",
+  OTHER: "🗓️",
+};
+
+export function eventTypeEmoji(id: string): string {
+  return EVENT_TYPE_EMOJI[id] ?? "🎉";
+}
+
 export function eventTypeLabel(id: string): string {
   return EVENT_TYPES.find((t) => t.id === id)?.label ?? id;
 }
