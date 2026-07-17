@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin, ok, bad } from "@/lib/api";
+import { linkRecipientToAllEvents } from "@/lib/recipients";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -25,5 +26,11 @@ export async function POST(req: NextRequest) {
   const recipient = await prisma.recipient.create({
     data: { name: b.name.trim(), email: b.email.trim(), active: b.active ?? true },
   });
+
+  // קישור אוטומטי לכל האירועים
+  if (b.linkToAll) {
+    await linkRecipientToAllEvents(recipient.id);
+  }
+
   return ok(recipient);
 }
