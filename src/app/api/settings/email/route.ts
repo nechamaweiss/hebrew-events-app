@@ -35,7 +35,8 @@ export async function PUT(req: NextRequest) {
 
   const b = await req.json().catch(() => ({}));
 
-  if (b.enabled) {
+  const isApi = b.provider === "brevo" || b.provider === "resend";
+  if (b.enabled && !isApi) {
     if (!b.host?.trim()) return bad("יש להזין כתובת שרת (host)");
     if (!b.username?.trim()) return bad("יש להזין שם משתמש (כתובת המייל)");
   }

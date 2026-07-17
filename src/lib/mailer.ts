@@ -29,19 +29,26 @@ interface EmailConfig {
 /**
  * טוען הגדרות מייל. עדיפות: מסך המערכת (DB) → משתני סביבה → אין (מצב הדמיה).
  */
+const API_PROVIDERS = ["brevo", "resend"];
+
 async function loadConfig(): Promise<EmailConfig | null> {
   try {
     const s = await prisma.emailSettings.findUnique({ where: { id: 1 } });
-    if (s && s.enabled && s.host.trim() && s.username.trim()) {
-      return {
-        provider: s.provider,
-        host: s.host.trim(),
-        port: s.port,
-        secure: s.secure,
-        user: s.username.trim(),
-        pass: s.password,
-        fromEmail: s.username.trim(),
-      };
+    if (s && s.enabled) {
+      const isApi = API_PROVIDERS.includes(s.provider);
+      // ספקי API (Brevo/Resend) דורשים רק מפתח; ספקי SMTP דורשים host+username
+      const ok = isApi ? Boolean(s.password.trim()) : Boolean(s.host.trim() && s.username.trim());
+      if (ok) {
+        return {
+          provider: s.provider,
+          host: s.host.trim(),
+          port: s.port,
+          secure: s.secure,
+          user: s.username.trim(),
+          pass: s.password,
+          fromEmail: s.username.trim(),
+        };
+      }
     }
   } catch {
     // נופל למשתני סביבה
@@ -110,8 +117,40 @@ async function sendViaBrevoApi(
 }
 
 /**
+ * שליחה דרך ה-API של Resend (HTTPS). מסירה מצוינת ל-Gmail.
+ * ללא דומיין מאומת, כתובת השולח היא onboarding@resend.dev.
+ */
+async function sendViaResend(
+  apiKey: string,
+  fromName: string,
+  replyTo: string,
+  args: SendMailArgs
+): Promise<SendMailResult> {
+  const from = `${fromName} <onboarding@resend.dev>`;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: [args.to],
+        subject: args.subject,
+        html: args.html,
+        text: args.text || undefined,
+        reply_to: replyTo || undefined,
+      }),
+    });
+    if (res.ok) return { success: true, simulated: false };
+    const body = await res.text();
+    return { success: false, simulated: false, error: `Resend ${res.status}: ${body.slice(0, 250)}` };
+  } catch (err) {
+    return { success: false, simulated: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
  * שולח מייל. אם אין הגדרות — "מצב הדמיה".
- * ספק Brevo → נשלח דרך ה-API (HTTPS). אחרת → SMTP רגיל.
+ * ספק Brevo/Resend → נשלח דרך ה-API (HTTPS). אחרת → SMTP רגיל.
  */
 export async function sendMail(args: SendMailArgs): Promise<SendMailResult> {
   const cfg = await loadConfig();
@@ -126,9 +165,12 @@ export async function sendMail(args: SendMailArgs): Promise<SendMailResult> {
 
   const fromEmail = (args.fromEmail && args.fromEmail.trim()) || cfg.fromEmail;
 
-  // Brevo → API (עוקף חסימת SMTP)
+  // ספקי API (עוקפים חסימת SMTP באחסון חינמי)
   if (cfg.provider === "brevo") {
     return sendViaBrevoApi(cfg.pass, fromName, fromEmail, args);
+  }
+  if (cfg.provider === "resend") {
+    return sendViaResend(cfg.pass, fromName, fromEmail, args);
   }
 
   // שאר הספקים → SMTP
@@ -163,6 +205,19 @@ export async function verifySmtp(): Promise<{ ok: boolean; simulated: boolean; e
       if (res.ok) return { ok: true, simulated: false };
       const body = await res.text();
       return { ok: false, simulated: false, error: `מפתח ה-API של Brevo אינו תקין (${res.status}). ודאי שהעתקת מפתח מסוג API key (xkeysib) ולא SMTP key.` };
+    } catch (err) {
+      return { ok: false, simulated: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  if (cfg.provider === "resend") {
+    try {
+      const res = await fetch("https://api.resend.com/domains", {
+        headers: { Authorization: `Bearer ${cfg.pass}` },
+      });
+      // 200 (יש הרשאה) או 401/403 (מפתח שגוי)
+      if (res.ok) return { ok: true, simulated: false };
+      return { ok: false, simulated: false, error: `מפתח ה-API של Resend אינו תקין (${res.status}). ודאי שהעתקת מפתח שמתחיל ב-re_.` };
     } catch (err) {
       return { ok: false, simulated: false, error: err instanceof Error ? err.message : String(err) };
     }

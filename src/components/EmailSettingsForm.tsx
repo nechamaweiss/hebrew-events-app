@@ -14,11 +14,14 @@ interface Data {
 }
 
 const PRESETS: Record<string, { host: string; port: number; secure: boolean; label: string }> = {
-  gmail: { host: "smtp.gmail.com", port: 587, secure: false, label: "Gmail (חינם, מומלץ)" },
+  resend: { host: "", port: 443, secure: false, label: "Resend (חינם, מסירה מצוינת ל-Gmail) ⭐" },
   brevo: { host: "smtp-relay.brevo.com", port: 587, secure: false, label: "Brevo / Sendinblue (חינם)" },
+  gmail: { host: "smtp.gmail.com", port: 587, secure: false, label: "Gmail (דורש אימות דו-שלבי)" },
   outlook: { host: "smtp-mail.outlook.com", port: 587, secure: false, label: "Outlook / Hotmail" },
   custom: { host: "", port: 587, secure: false, label: "מותאם אישית" },
 };
+
+const API_PROVIDERS = ["brevo", "resend"];
 
 export default function EmailSettingsForm({ initial }: { initial: Data }) {
   const router = useRouter();
@@ -108,43 +111,53 @@ export default function EmailSettingsForm({ initial }: { initial: Data }) {
           </select>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="sm:col-span-2">
-            <label className="label">כתובת שרת (host)</label>
-            <input className="input" value={data.host} onChange={(e) => set("host", e.target.value)} dir="ltr" />
-          </div>
-          <div>
-            <label className="label">פורט</label>
-            <input type="number" className="input" value={data.port} onChange={(e) => set("port", Number(e.target.value))} dir="ltr" />
-          </div>
+        {/* שדות SMTP — רק לספקים שאינם API */}
+        {!API_PROVIDERS.includes(data.provider) && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <label className="label">כתובת שרת (host)</label>
+                <input className="input" value={data.host} onChange={(e) => set("host", e.target.value)} dir="ltr" />
+              </div>
+              <div>
+                <label className="label">פורט</label>
+                <input type="number" className="input" value={data.port} onChange={(e) => set("port", Number(e.target.value))} dir="ltr" />
+              </div>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input type="checkbox" checked={data.secure} onChange={(e) => set("secure", e.target.checked)} className="h-4 w-4" />
+              <span className="text-sm">חיבור מאובטח SSL (סמן עבור פורט 465)</span>
+            </label>
+            <div>
+              <label className="label">שם משתמש (כתובת המייל שלך)</label>
+              <input className="input" value={data.username} onChange={(e) => set("username", e.target.value)} dir="ltr" placeholder="you@gmail.com" />
+            </div>
+          </>
+        )}
+
+        <div>
+          <label className="label">
+            {data.provider === "resend" ? "מפתח API של Resend (re_...)" : data.provider === "brevo" ? "מפתח API של Brevo (xkeysib)" : "סיסמת אפליקציה / מפתח SMTP"}
+          </label>
+          <input
+            type="password"
+            className="input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            dir="ltr"
+            placeholder={data.hasPassword ? "•••••••• (שמורה — השאר ריק כדי לא לשנות)" : "הדבק כאן"}
+          />
         </div>
 
-        <label className="flex cursor-pointer items-center gap-2">
-          <input type="checkbox" checked={data.secure} onChange={(e) => set("secure", e.target.checked)} className="h-4 w-4" />
-          <span className="text-sm">חיבור מאובטח SSL (סמן עבור פורט 465)</span>
-        </label>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="label">שם משתמש (כתובת המייל שלך)</label>
-            <input className="input" value={data.username} onChange={(e) => set("username", e.target.value)} dir="ltr" placeholder="you@gmail.com" />
+        {data.provider === "resend" && (
+          <div className="rounded-lg p-3 text-sm" style={{ background: "color-mix(in srgb, var(--color-primary) 8%, transparent)" }}>
+            ⭐ <strong>Resend — מסירה מצוינת ל-Gmail.</strong> הדביקי <strong>מפתח API</strong> שמתחיל ב-<code>re_</code> (מ-<a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="link">resend.com/api-keys</a>). המיילים נשלחים מכתובת <code>onboarding@resend.dev</code>. אין צורך בשם משתמש או שרת.
           </div>
-          <div>
-            <label className="label">{data.provider === "brevo" ? "מפתח API (xkeysib)" : "סיסמת אפליקציה / מפתח SMTP"}</label>
-            <input
-              type="password"
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              dir="ltr"
-              placeholder={data.hasPassword ? "•••••••• (שמורה — השאר ריק כדי לא לשנות)" : "הדבק כאן"}
-            />
-          </div>
-        </div>
+        )}
 
         {data.provider === "brevo" && (
           <div className="rounded-lg p-3 text-sm" style={{ background: "color-mix(in srgb, var(--color-primary) 8%, transparent)" }}>
-            💡 <strong>Brevo שולח דרך ה-API</strong> (עוקף חסימות שרת). בשדה הסיסמה הדביקי <strong>מפתח API</strong> שמתחיל ב-<code>xkeysib-</code> (מלשונית <strong>„API keys & MCP"</strong> ב-Brevo), <u>לא</u> את ה-SMTP key. שם המשתמש יכול להישאר כפי שהוא.
+            💡 <strong>Brevo שולח דרך ה-API.</strong> הדביקי <strong>מפתח API</strong> שמתחיל ב-<code>xkeysib-</code> (מלשונית „API keys & MCP" ב-Brevo), <u>לא</u> את ה-SMTP key.
           </div>
         )}
       </div>
